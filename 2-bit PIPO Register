@@ -1,0 +1,30 @@
+module PIPO_Register (
+    input wire gated_clk,  // Gated clock input
+    input wire rst,        // Reset signal
+    input wire [1:0] d,    // Data input
+    output reg [1:0] q,    // Data output
+    output reg [15:0] toggle_count, // Tracks total bit flips
+    output reg [15:0] cycle_count  // Total active clock cycles
+);
+
+    reg [1:0] prev_q;
+
+    always @(posedge gated_clk or posedge rst) begin
+        if (rst) begin
+            q <= 2'b00;
+            prev_q <= 2'b00;
+            toggle_count <= 0;
+            cycle_count <= 0;
+        end else begin
+            cycle_count <= cycle_count + 1; // Count active cycles
+
+            // Count bit flips (Hamming distance) and the clock toggling to calculate activity factor
+            toggle_count <= toggle_count + 
+                ((d[1] ^ prev_q[1]) + (d[0] ^ prev_q[0])+1);
+
+            q <= d; // Update output
+            prev_q <= d; // Store previous state
+        end
+    end
+
+endmodule
