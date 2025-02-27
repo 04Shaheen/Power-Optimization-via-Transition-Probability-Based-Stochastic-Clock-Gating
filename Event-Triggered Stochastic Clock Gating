@@ -1,0 +1,39 @@
+module ClockGating_EventTriggered (
+    input wire clk,
+    input wire rst,
+    input wire [1:0] state,
+    output reg clk_en
+);
+    parameter integer EVENT_THRESHOLD = 1;  // Min bit flips to keep clock active
+    parameter integer IDLE_CYCLES = 4;     // Cycles of no activity before gating
+
+    reg [1:0] prev_state;
+    reg [1:0] bit_flips;
+    reg [2:0] idle_counter;  // 3 bits to count up to 4 (0 to 4 inclusive)
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            prev_state <= 2'b00;
+            bit_flips <= 0;
+            idle_counter <= 0;
+            clk_en <= 1;  // Clock on by default
+        end else begin
+            // Calculate bit flips
+            bit_flips <= (state[0] ^ prev_state[0]) + (state[1] ^ prev_state[1]);
+            prev_state <= state;
+
+            // Control clock enable
+            if (bit_flips >= EVENT_THRESHOLD) begin
+                clk_en <= 1;         // Activity detected, enable clock
+                idle_counter <= 0;   // Reset idle counter
+            end else begin
+                if (idle_counter < IDLE_CYCLES) begin
+                    idle_counter <= idle_counter + 1;  // Count idle cycles
+                    clk_en <= 1;                       // Keep clock on during countdown
+                end else begin
+                    clk_en <= 0;                       // Gate clock after idle period
+                end
+            end
+        end
+    end
+endmodule
