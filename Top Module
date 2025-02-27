@@ -1,0 +1,80 @@
+module TopModule (
+    input wire clk,       
+    input wire rst,       
+    input wire [1:0] d,  
+    output wire [1:0] q_window, 
+    output wire [1:0] q_event,  
+    output wire [1:0] q_always, 
+    output wire gated_clk_window,
+    output wire gated_clk_event,
+    output wire gated_clk_always,
+    output wire [15:0] toggle_count_window,
+    output wire [15:0] active_cycle_count_window,
+    output wire [15:0] toggle_count_event,
+    output wire [15:0] active_cycle_count_event,
+    output wire [15:0] toggle_count_always,
+    output reg [15:0] total_cycle_count  
+);
+
+    wire clk_en_window; 
+    wire clk_en_event;  
+    wire clk_en_always;
+
+    ClockGating_WindowBased clock_gate_window (
+        .clk(clk),
+        .rst(rst),
+        .state(q_window),
+        .clk_en(clk_en_window)
+    );
+
+    ClockGating_EventTriggered clock_gate_event (
+        .clk(clk),
+        .rst(rst),
+        .state(q_event),
+        .clk_en(clk_en_event)
+    );
+
+    Clock_AlwaysEnabled clock_always (
+        .clk_en(clk_en_always)
+    );
+
+    assign gated_clk_window = clk & clk_en_window;
+    assign gated_clk_event = clk & clk_en_event;
+    assign gated_clk_always = clk & clk_en_always;
+
+    PIPO_Register pipo_window (
+        .gated_clk(gated_clk_window),
+        .rst(rst),
+        .d(d),
+        .q(q_window),
+        .toggle_count(toggle_count_window),
+        .cycle_count(active_cycle_count_window)
+    );
+
+    PIPO_Register pipo_event (
+        .gated_clk(gated_clk_event),
+        .rst(rst),
+        .d(d),
+        .q(q_event),
+        .toggle_count(toggle_count_event),
+        .cycle_count(active_cycle_count_event)
+    );
+
+    PIPO_Register pipo_always (
+        .gated_clk(gated_clk_always),
+        .rst(rst),
+        .d(d),
+        .q(q_always),
+        .toggle_count(toggle_count_always),
+        .cycle_count() 
+    );
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            total_cycle_count <= 0;
+        end else begin
+            total_cycle_count <= total_cycle_count + 1;
+        end
+    end
+
+endmodule
