@@ -1,0 +1,65 @@
+module WindowBased_Testbench;
+
+    // Inputs to TopModule
+    reg clk, rst;
+    reg [1:0] d;
+
+    // Outputs from TopModule
+    wire [1:0] q_window, q_event, q_always;
+    wire gated_clk_window, gated_clk_event, gated_clk_always;
+    wire [15:0] toggle_count_window, active_cycle_count_window;
+    wire [15:0] toggle_count_event, active_cycle_count_event;
+    wire [15:0] toggle_count_always;
+    wire [15:0] total_cycle_count;
+
+    // Instantiate the TopModule
+    TopModule uut (
+        .clk(clk),
+        .rst(rst),
+        .d(d),
+        .q_window(q_window),
+        .q_event(q_event),
+        .q_always(q_always),
+        .gated_clk_window(gated_clk_window),
+        .gated_clk_event(gated_clk_event),
+        .gated_clk_always(gated_clk_always),
+        .toggle_count_window(toggle_count_window),
+        .active_cycle_count_window(active_cycle_count_window),
+        .toggle_count_event(toggle_count_event),
+        .active_cycle_count_event(active_cycle_count_event),
+        .toggle_count_always(toggle_count_always),
+        .total_cycle_count(total_cycle_count)
+    );
+
+    // Clock generation (10ns period, 50 MHz)
+    always #5 clk = ~clk;
+
+    // Input pattern generator for d (emphasizing window-based gating)
+    initial begin
+        clk = 0;
+        rst = 1;
+        d = 2'b00;
+
+        // Hold reset for 2 cycles
+        #10 rst = 0;
+
+        // Pattern 1: High activity - Alternate between 2'b00 and 2'b11 every 20 cycles (4 times)
+        repeat (4) begin
+            #20 d = 2'b00;
+            #20 d = 2'b11;
+        end
+
+        // Pattern 2: Long idle - Stay at 2'b01 for 80 cycles to show gating
+        #80 d = 2'b01;
+
+        // Pattern 3: High activity again - Alternate between 2'b10 and 2'b01 every 20 cycles (3 times)
+        repeat (3) begin
+            #20 d = 2'b10;
+            #20 d = 2'b01;
+        end
+
+        // End simulation
+        #10 $finish;
+    end
+
+endmodule
