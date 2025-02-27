@@ -1,0 +1,54 @@
+module ClockGating_WindowBased (
+    input wire clk,
+    input wire rst,
+    input wire [1:0] state,
+    output reg clk_en
+);
+    parameter integer OBSERVATION_WINDOW = 4;
+    parameter integer GATING_WINDOW = 8;
+    parameter integer ACTIVITY_THRESHOLD = 1;
+
+    reg [1:0] prev_state;
+    reg [3:0] activity_count;
+    reg [3:0] window_counter;
+    reg in_observation_window;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            prev_state <= 2'b00;
+            activity_count <= 0;
+            window_counter <= 0;
+            clk_en <= 1;
+            in_observation_window <= 1;
+        end else begin
+            prev_state <= state;
+
+            if (in_observation_window) begin
+                clk_en <= 1;
+                if (state != prev_state) begin
+                    activity_count <= activity_count +
+                        ((state[1] ^ prev_state[1]) + (state[0] ^ prev_state[0]));
+                end
+                window_counter <= window_counter + 1;
+                if (window_counter == OBSERVATION_WINDOW - 1) begin
+                    window_counter <= 0;
+                    if (activity_count <= ACTIVITY_THRESHOLD) begin
+                        clk_en <= 0;
+                        in_observation_window <= 0;
+                    end else begin
+                        activity_count <= 0;
+                    end
+                end
+            end else begin
+                clk_en <= 0;
+                window_counter <= window_counter + 1;
+                if (window_counter == GATING_WINDOW - 1) begin
+                    window_counter <= 0;
+                    activity_count <= 0;
+                    clk_en <= 1;
+                    in_observation_window <= 1;
+                end
+            end
+        end
+    end
+endmodule
