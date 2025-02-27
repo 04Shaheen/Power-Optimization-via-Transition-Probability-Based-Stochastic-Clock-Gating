@@ -1,5 +1,4 @@
-# Power-Optimization-via-Transition-Probability-Based-Stochastic-Clock-Gating
-Clock gating based on activity factor calculation of digital CMOS circuits using Markov Chain model and state transitional probabilities
+Power-Optimization-via-Transition-Probability-Based-Stochastic-Clock-Gating
 Clock Gating Techniques for PIPO Register System
 Overview
 This repository contains a Verilog implementation of window-based and event-triggered clock gating techniques designed to reduce power consumption in a Parallel-In Parallel-Out (PIPO) register system. The project, developed for an Applied Stochastic Processes mathematics course, leverages stochastic modeling (e.g., Markov chains, probability distributions) to generate input patterns and evaluate the effectiveness of the gating methods. Simulations were conducted using Xilinx Vivado to analyze power savings through toggle counts and active cycles, comparing the gated methods (window-based, event-triggered) against an always-enabled baseline.
@@ -19,22 +18,23 @@ Testbenches
 Testbench.v: Probabilistic input testbenches using Markov chain-based random state transitions over 100,000 cycles.
 WindowBased_Testbench.v: Tailored testbench for window-based gating, emphasizing long idle periods and high-activity patterns over 250ns.
 EventTriggered_Testbench.v: Tailored testbench for event-triggered gating, focusing on sporadic changes and idle periods over 230ns.
-Install Xilinx Vivado:
+Installation
+Install Xilinx Vivado
 Ensure Xilinx Vivado (or a compatible version for Verilog simulation) is installed on your system. Download from the Xilinx website if needed.
 Verify Vivado is configured for Verilog compilation and simulation.
-Dependencies:
+Dependencies
 No additional dependencies are required beyond Vivado for simulation and waveform analysis.
 Usage
-Open in Vivado:
+Open in Vivado
 Launch Xilinx Vivado and create a new project.
 Add all .v files (modules and testbenches) to your project source files.
 Set the top module for simulation (e.g., Testbench, WindowBased_Testbench, or EventTriggered_Testbench).
-Run Simulations:
+Run Simulations
 In Vivado, use the Simulation tab to compile and simulate each testbench.
 Configure the simulation time (e.g., 100,000 cycles for probabilistic, 250ns for window-based, 230ns for event-triggered).
 Add signals like clk, rst, d, gated_clk_*, q_*, toggle_count_*, and active_cycle_count_* to the waveform viewer.
 Run the simulation and analyze waveforms to observe clock gating behavior and power savings.
-Analyze Results:
+Analyze Results
 Use Vivado’s waveform viewer to inspect gating effectiveness (e.g., idle periods, activity patterns).
 Optionally, extract numerical data (e.g., toggle counts, active cycles) to quantify power savings.
 Contributing
