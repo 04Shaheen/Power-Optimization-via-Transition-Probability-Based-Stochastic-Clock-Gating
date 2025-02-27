@@ -1,0 +1,124 @@
+module Testbench;
+
+    reg clk, rst;
+    reg [1:0] d;
+    wire [15:0] total_cycle_count;
+
+    TopModule uut (
+        .clk(clk),
+        .rst(rst),
+        .d(d),
+        .total_cycle_count(total_cycle_count)
+    );
+
+    always #10 clk = ~clk;
+
+    initial begin
+        clk = 0;
+        rst = 1;
+        d = 2'b00;
+        #20 rst = 0;
+
+        repeat (100000) begin
+            #20;
+            generate_next_state();
+        end
+
+        $display("Total Cycles: %d", total_cycle_count);
+        $finish;
+    end
+
+endmodule
+
+`timescale 1ns / 1ps
+
+module Testbench;
+
+    reg clk, rst;
+    reg [1:0] d;
+    wire [1:0] q_window, q_event, q_always;
+    wire gated_clk_window, gated_clk_event, gated_clk_always;
+    wire [15:0] toggle_count_window, active_cycle_count_window;
+    wire [15:0] toggle_count_event, active_cycle_count_event;
+    wire [15:0] toggle_count_always;
+    wire [15:0] total_cycle_count;
+
+    // Instantiate the Top Module
+    TopModule uut (
+        .clk(clk),
+        .rst(rst),
+        .d(d),
+        .q_window(q_window),
+        .q_event(q_event),
+        .q_always(q_always),
+        .gated_clk_window(gated_clk_window),
+        .gated_clk_event(gated_clk_event),
+        .gated_clk_always(gated_clk_always),
+        .toggle_count_window(toggle_count_window),
+        .active_cycle_count_window(active_cycle_count_window),
+        .toggle_count_event(toggle_count_event),
+        .active_cycle_count_event(active_cycle_count_event),
+        .toggle_count_always(toggle_count_always),
+        .total_cycle_count(total_cycle_count)
+    );
+
+    // Clock Generation (50 MHz -> 20ns period)
+    always #10 clk = ~clk;
+
+    // Probability-Based State Transition Generator
+    task generate_next_state();
+        integer rand_num;
+        begin
+            rand_num = $random % 100; // Generate a number between 0 and 99
+
+            case (d)
+                2'b00: begin
+                    if (rand_num < 50) d = 2'b00; // 50% chance to stay in 00
+                    else if (rand_num < 70) d = 2'b01; // 20% chance to 01
+                    else if (rand_num < 90) d = 2'b10; // 20% chance to 10
+                    else d = 2'b11; // 10% chance to 11
+                end
+
+                2'b01: begin
+                    if (rand_num < 30) d = 2'b00; // 30% chance to 00
+                    else if (rand_num < 70) d = 2'b01; // 40% chance to 01
+                    else if (rand_num < 90) d = 2'b10; // 20% chance to 10
+                    else d = 2'b11; // 10% chance to 11
+                end
+
+                2'b10: begin
+                    if (rand_num < 30) d = 2'b00; // 30% chance to 00
+                    else if (rand_num < 50) d = 2'b01; // 20% chance to 01
+                    else if (rand_num < 90) d = 2'b10; // 40% chance to 10
+                    else d = 2'b11; // 10% chance to 11
+                end
+
+                2'b11: begin
+                    if (rand_num < 10) d = 2'b00; // 10% chance to 00
+                    else if (rand_num < 40) d = 2'b01; // 30% chance to 01
+                    else if (rand_num < 70) d = 2'b10; // 30% chance to 10
+                    else d = 2'b11; // 30% chance to 11
+                end
+            endcase
+        end
+    endtask
+
+    // Simulation Control
+    initial begin
+        // Initialize signals
+        clk = 0;
+        rst = 1;
+        d = 2'b00; // Start from state 00
+        #20 rst = 0; // Deassert reset after 20ns
+
+        // Run simulation for 100,000 cycles
+        repeat (100000) begin
+            #20; // Wait for next clock cycle
+            generate_next_state(); // Update state based on Markov probabilities
+        end
+
+        // End simulation
+        $finish;
+    end
+
+endmodule
